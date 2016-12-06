@@ -4,9 +4,9 @@
         "pebble-clay": "^1.0.4"
     },
     "keywords": [],
-    "name": "metro-watchface",
+    "name": "basic-watchface",
     "pebble": {
-        "displayName": "Metro Watchface",
+        "displayName": "Basic Watchface",
         "enableMultiJS": true,
         "messageKeys": [],
         "projectType": "native",
@@ -28,7 +28,7 @@
             "diorite",
             "emery"
         ],
-        "uuid": "2351ba77-011a-4715-b32c-b6f080fd41fc",
+        "uuid": "cb786667-e9e3-4579-8900-4b9fc50f7ea4",
         "watchapp": {
             "watchface": true
         }
