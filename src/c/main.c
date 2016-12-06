@@ -3,6 +3,7 @@
 static Window *s_main_window; // Main window
 static Layer *s_window_layer, *s_foreground_layer; // Window layer to add other layers to and the foreground layer
 static char s_time_text[6] = "00:00", s_battery_text[5] = "100%"; // Text to put time and battery state into
+static GFont s_leco_font;
 
 // Update procedure for foreground layer
 static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
@@ -13,19 +14,13 @@ static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
 	graphics_context_set_text_color(ctx, GColorBlack);
 	
 	// Draw time text
-	GSize time_text_bounds = graphics_text_layout_get_content_size("24:00", fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS),
-																																 GRect(0, 0, bounds.size.w, bounds.size.h),
-																																 GTextOverflowModeWordWrap, GTextAlignmentCenter);
-	graphics_draw_text(ctx, s_time_text, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), 
-										 GRect((bounds.size.w - time_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2, time_text_bounds.w, time_text_bounds.h),
+	GSize time_text_bounds = graphics_text_layout_get_content_size("24:00", fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	graphics_draw_text(ctx, s_time_text, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), GRect((bounds.size.w - time_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2, time_text_bounds.w, time_text_bounds.h),
 										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 	
 	// Draw battery text
-	GSize battery_text_bounds = graphics_text_layout_get_content_size("100%", fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LECO_20)),
-																																 GRect(0, 0, bounds.size.w, bounds.size.h),
-																																 GTextOverflowModeWordWrap, GTextAlignmentCenter);
-	graphics_draw_text(ctx, s_battery_text, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LECO_20)), 
-										 GRect((bounds.size.w - battery_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2 - battery_text_bounds.h, battery_text_bounds.w, battery_text_bounds.h),
+	GSize battery_text_bounds = graphics_text_layout_get_content_size("100%", s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	graphics_draw_text(ctx, s_battery_text, s_leco_font, GRect((bounds.size.w - battery_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2 - battery_text_bounds.h, battery_text_bounds.w, battery_text_bounds.h),
 										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
@@ -78,6 +73,9 @@ static void init() {
 		.unload = main_window_unload
 	});
 	
+	// Load custom font
+	s_leco_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_LECO_20));
+	
 	window_stack_push(s_main_window, true);
 	
 	// Subscribe to the clock
@@ -89,6 +87,7 @@ static void init() {
 
 // Destroy main window upon leaving
 static void deinit() {
+	fonts_unload_custom_font(s_leco_font);
 	window_destroy(s_main_window);
 }
 
