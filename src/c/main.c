@@ -2,7 +2,7 @@
 
 static Window *s_main_window; // Main window
 static Layer *s_window_layer, *s_foreground_layer; // Window layer to add other layers to and the foreground layer
-static char s_time_text[6] = "00:00", s_battery_text[5] = "100%"; // Text to put time and battery state into
+static char s_time_text[6] = "00:00", s_battery_text[5] = "100%", s_steps_text[6]; // Text to put time and battery state into
 static GFont s_leco_font;
 
 // Update procedure for foreground layer
@@ -14,36 +14,63 @@ static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
 	graphics_context_set_text_color(ctx, GColorBlack);
 	
 	// Draw time text
-	GSize time_text_bounds = graphics_text_layout_get_content_size("24:00", fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	GSize time_text_bounds = graphics_text_layout_get_content_size(s_time_text, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	graphics_draw_text(ctx, s_time_text, fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS), GRect((bounds.size.w - time_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2, time_text_bounds.w, time_text_bounds.h),
 										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 	
 	// Draw battery text
-	GSize battery_text_bounds = graphics_text_layout_get_content_size("100%", s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	GSize battery_text_bounds = graphics_text_layout_get_content_size(s_battery_text, s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	graphics_draw_text(ctx, s_battery_text, s_leco_font, GRect((bounds.size.w - battery_text_bounds.w) / 2, bounds.size.h / 2 - time_text_bounds.h / 2 - battery_text_bounds.h, battery_text_bounds.w, battery_text_bounds.h),
+										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	
+	// Draw health text
+	GSize step_text_bounds = graphics_text_layout_get_content_size(s_steps_text, s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	graphics_draw_text(ctx, s_steps_text, s_leco_font, GRect((bounds.size.w - step_text_bounds.w) / 2, bounds.size.h / 2 + time_text_bounds.h / 2 + step_text_bounds.h, step_text_bounds.w, step_text_bounds.h),
 										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
-// Update the UI upon detecting a change in the minutes or change in battery percentage
-static void update_ui() {
+static void update_time() {
 	// Get current time and put into string
 	time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
   strftime(s_time_text, sizeof(s_time_text), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
-	
-	// Get current battery level and put into string
-	BatteryChargeState state = battery_state_service_peek();
-  int s_battery_level = state.charge_percent;
-	snprintf(s_battery_text, sizeof(s_battery_text), "%d%%", s_battery_level);
-	
+}
+
+
+// Handler for when minute changes - update the UI.
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+	update_time();
 	// Redraw the screen
 	layer_mark_dirty(s_foreground_layer);
 }
 
-// Handler for when minute changes - update the UI.
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  update_ui();
+// Handles changes upon event for battery
+static void battery_handler() {
+	// Get current battery level and put into string
+	BatteryChargeState state = battery_state_service_peek();
+  int s_battery_level = state.charge_percent;
+	snprintf(s_battery_text, sizeof(s_battery_text), "%d%%", s_battery_level);
+	// Redraw the screen
+	layer_mark_dirty(s_foreground_layer);
 }
+
+#if defined(PBL_HEALTH)
+static void update_step_count() {
+	HealthValue value = health_service_sum_today(HealthMetricStepCount);
+	if ((int)value >= 1000) {
+		int thousands = value / 1000;
+		int hundreds = value % 1000 / 100;
+		snprintf(s_steps_text, sizeof(s_steps_text), "%d.%dk", thousands, hundreds);
+	} else {
+		snprintf(s_steps_text, sizeof(s_steps_text), "%d", (int)value);
+	}
+}
+
+// Handles changes upon event in health
+static void health_handler(HealthEventType event, void *context) {
+	update_step_count();
+}
+#endif
 
 static void initialize_ui() {
 	GRect bounds = layer_get_bounds(s_window_layer);
@@ -57,7 +84,12 @@ static void initialize_ui() {
 static void main_window_load(Window *window) {
 	s_window_layer = window_get_root_layer(window);
 	initialize_ui();
-	update_ui();
+	update_time();
+	battery_handler();
+	#if defined(PBL_HEALTH)
+	update_step_count();
+	#endif
+	layer_mark_dirty(s_foreground_layer);
 }
 
 // Destroy layers upon unloading
@@ -82,7 +114,12 @@ static void init() {
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 	
 	// Subscribe to the battery level
-	battery_state_service_subscribe(update_ui);
+	battery_state_service_subscribe(battery_handler);
+	
+	// Subscribe to the health service if Pebble Health is available
+	#if defined(PBL_HEALTH)
+		health_service_events_subscribe(health_handler, NULL);
+	#endif
 }
 
 // Destroy main window upon leaving

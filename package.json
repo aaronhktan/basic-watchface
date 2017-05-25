@@ -11,7 +11,7 @@
         "resources": {
             "media": [
                 {
-                    "characterRegex": "[0-9:%]",
+                    "characterRegex": "[0-9:%k.]",
                     "file": "fonts/LECO1976.ttf",
                     "name": "LECO_20",
                     "targetPlatforms": null,
