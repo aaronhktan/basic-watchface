@@ -2,8 +2,20 @@
 
 static Window *s_main_window; // Main window
 static Layer *s_window_layer, *s_foreground_layer; // Window layer to add other layers to and the foreground layer
-static char s_time_text[6] = "00:00", s_battery_text[5] = "100%", s_steps_text[6]; // Text to put time and battery state into
+static char s_time_text[6] = "00:00", s_battery_text[5] = "100%", s_steps_text[6], s_temperature_buffer[8], s_conditions_buffer[32], s_weather_text[32]; // Text to put time and battery state into
 static GFont s_leco_font;
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+	Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_temperature);
+	Tuple *conditions_tuple = dict_find(iterator, MESSAGE_KEY_conditions);
+	
+	if (temp_tuple && conditions_tuple) {
+		snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%dC", (int)temp_tuple->value->int32);
+		snprintf(s_conditions_buffer, sizeof(s_conditions_buffer), "%s", conditions_tuple->value->cstring);
+		snprintf(s_weather_text, sizeof(s_weather_text), "%s:%s", s_temperature_buffer, s_conditions_buffer);
+		layer_mark_dirty(s_foreground_layer);
+	}
+}
 
 // Update procedure for foreground layer
 static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
@@ -27,6 +39,11 @@ static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
 	GSize step_text_bounds = graphics_text_layout_get_content_size(s_steps_text, s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
 	graphics_draw_text(ctx, s_steps_text, s_leco_font, GRect((bounds.size.w - step_text_bounds.w) / 2, bounds.size.h / 2 + time_text_bounds.h / 2 + step_text_bounds.h, step_text_bounds.w, step_text_bounds.h),
 										 GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	
+	// Draw weather text
+	GSize weather_text_bounds = graphics_text_layout_get_content_size(s_weather_text, s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
+	graphics_draw_text(ctx, s_weather_text, s_leco_font, GRect((bounds.size.w - weather_text_bounds.w) / 2, weather_text_bounds.h, weather_text_bounds.w, weather_text_bounds.h),
+										GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
 static void update_time() {
@@ -98,6 +115,9 @@ static void main_window_unload(Window *window) {
 }
 
 static void init() {
+	app_message_register_inbox_received(inbox_received_callback);
+	app_message_open(128, 128);
+	
 	// Create window and set mmethods
 	s_main_window = window_create();
 	window_set_window_handlers(s_main_window, (WindowHandlers) {

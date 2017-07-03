@@ -1,17 +1,36 @@
 {
     "author": "cheeseisdisgusting@gmail.com",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.0"
+    },
     "keywords": [],
     "name": "basic-watchface",
     "pebble": {
+        "capabilities": [
+            "location",
+            "configurable",
+            "health"
+        ],
         "displayName": "Basic Watchface",
         "enableMultiJS": true,
-        "messageKeys": [],
+        "messageKeys": [
+            "healthEnabled",
+            "weatherEnabled",
+            "disconnectEnabled",
+            "hourlyVibrationEnabled",
+            "weatherProvider",
+            "temperatureUnit",
+            "owmKey",
+            "wuKey",
+            "dsKey",
+            "temperature",
+            "conditions"
+        ],
         "projectType": "native",
         "resources": {
             "media": [
                 {
-                    "characterRegex": "[0-9:%k.]",
+                    "characterRegex": "[0-9:%a-zA-Z .,]",
                     "file": "fonts/LECO1976.ttf",
                     "name": "LECO_20",
                     "targetPlatforms": null,
@@ -32,5 +51,5 @@
             "watchface": true
         }
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
 }
