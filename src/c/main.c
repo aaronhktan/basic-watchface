@@ -42,7 +42,7 @@ static void foreground_update_proc(Layer *s_foreground_layer, GContext *ctx) {
 	
 	// Draw weather text
 	GSize weather_text_bounds = graphics_text_layout_get_content_size(s_weather_text, s_leco_font, GRect(0, 0, bounds.size.w, bounds.size.h), GTextOverflowModeWordWrap, GTextAlignmentCenter);
-	graphics_draw_text(ctx, s_weather_text, s_leco_font, GRect((bounds.size.w - weather_text_bounds.w) / 2, weather_text_bounds.h, weather_text_bounds.w, weather_text_bounds.h),
+	graphics_draw_text(ctx, s_weather_text, s_leco_font, GRect((bounds.size.w - weather_text_bounds.w) / 2, weather_text_bounds.h / 2, weather_text_bounds.w, weather_text_bounds.h),
 										GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
