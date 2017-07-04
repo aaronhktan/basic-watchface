@@ -1,6 +1,9 @@
 var Clay = require('pebble-clay');
 var clayConfig = require('./config');
-var clay = new Clay(clayConfig);
+var customClay = require('./custom-clay');
+var messageKeys = require('message_keys');
+var clay = new Clay(clayConfig, customClay);
+
 var weather =  require('./weather.js');
 
 Pebble.addEventListener('ready', function (e) {
@@ -8,3 +11,10 @@ Pebble.addEventListener('ready', function (e) {
 		weather.getWeather();
 	}
 );
+
+Pebble.addEventListener('appmessage', function (e) {
+	var settings = JSON.parse(localStorage.getItem('clay-settings'));
+	if (settings.weatherEnabled || settings === null) {
+		weather.getWeather();
+	}
+});

@@ -24,7 +24,9 @@
             "wuKey",
             "dsKey",
             "temperature",
-            "conditions"
+            "conditions",
+            "pmEmail",
+            "pmPIN"
         ],
         "projectType": "native",
         "resources": {

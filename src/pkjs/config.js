@@ -30,6 +30,7 @@ module.exports = [
 	},
 	{
 		"type": "section",
+		"capabilities": ["NOT_PLATFORM_APLITE"],
 		"items": [
 			{
 				"type": "heading",
@@ -138,30 +139,32 @@ module.exports = [
 			},
 			{
 				"type": "text",
-				"defaultValue": "Import your API keys for OpenWeatherMap, Weather Underground, and Dark Sky/Forecast.io from pmkey.xyz here."
+				"defaultValue": "Import your API keys for OpenWeatherMap, Weather Underground, and Dark Sky/Forecast.io from <a href=pmkey.xyz>pmkey.xyz</a> here.",
 			},
 			{
 				"type": "input",
+				"messageKey": "pmEmail",
 				"label": "Email Address",
 				"attributes": {
 					"placeholder": "e.g. name@url.com",
 					"type": "email"
-				}
+				},
 			},
 			{
 				"type": "input",
+				"messageKey": "pmPIN",
 				"label": "PIN",
 				"attributes": {
 					"placeholder": "e.g. 91365",
 					"type": "tel",
-					"limit": 5,
-				}
+					"limit": 5
+				},
 			},
 			{
 				"type": "button",
 				"primary": false,
-				"defaultValue": "Fetch Keys",
-				"id": "fetchButton",
+				"defaultValue": "Import Keys",
+				"id": "importButton"
 			}
 		]
 	},
